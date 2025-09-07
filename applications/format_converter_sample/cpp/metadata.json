@@ -1,23 +1,29 @@
 {
-  "name": "format_converter_sample",
-  "version": "0.1.0",
-  "title": "Format Converter Sample Application",
-  "description": "A C++ Holohub sample application demonstrating usage of holoscan::ops::FormatConverterOp to convert synthetic RGB tensors from uint8 HWC to float32 HWC format.",
-  "author": "Neil Taïson Rigaud (@blackbird410)",
-  "license": "Apache-2.0",
-  "language": "cpp",
-  "dependencies": {
-    "holoscan": ">=3.3.0"
-  },
-  "hardware": {
-    "gpu": true,
-    "dpu": false
-  },
-  "container": {
-    "manual_setup": false
-  },
-  "run": {
-    "cmd": "./applications/format_converter_sample/format_converter_app"
-  },
-  "tags": ["sample", "format-converter", "cpp", "holoscan-operator"]
+  "application": {
+    "name": "Format Converter Sample",
+    "authors": [
+      {
+        "name": "Neil Taison Rigaud",
+      }
+    ],
+    "language": "C++",
+    "version": "0.1.0",
+    "changelog": {
+      "0.1.0": "Initial release with FormatConverterOp integration"
+    },
+    "holoscan_sdk": {
+      "minimum_required_version": "3.3.0",
+      "tested_versions": ["3.3.0"]
+    },
+    "platforms": ["x86_64", "aarch64"],
+    "tags": ["Example", "C++", "Holoscan", "Operator", "FormatConverter"],
+    "ranking": 0,
+    "requirements": {
+      "data": []
+    },
+    "run": {
+      "command": "<holohub_app_bin>/format_converter_app",
+      "workdir": "cpp/build"
+    }
+  }
 }
