@@ -9,6 +9,7 @@
 #include <holoscan/holoscan.hpp>
 #include <holoscan/operators/format_converter/format_converter.hpp>
 #include <gxf/std/tensor.hpp>
+#include <cuda_runtime.h>
 
 using namespace holoscan;
 
@@ -53,11 +54,11 @@ class SyntheticSourceOp : public Operator {
       throw std::runtime_error("Failed to allocate tensor");
     }
 
-    // Configure tensor shape and type
+    // Configure tensor shape and type - Use DEVICE memory for GPU processing
     nvidia::gxf::Shape shape{H, W, C};
     auto primitive_type = nvidia::gxf::PrimitiveType::kUnsigned8;
     auto element_size = sizeof(uint8_t);
-    auto storage_type = nvidia::gxf::MemoryStorageType::kHost;
+    auto storage_type = nvidia::gxf::MemoryStorageType::kDevice; // Changed to device memory
 
     // Get GXF allocator handle from Holoscan allocator
     auto maybe_gxf_allocator = nvidia::gxf::Handle<nvidia::gxf::Allocator>::Create(context.context(),
@@ -68,8 +69,11 @@ class SyntheticSourceOp : public Operator {
     
     gxf_tensor.value()->reshape<uint8_t>(shape, storage_type, maybe_gxf_allocator.value());
     
-    // Copy data to tensor
-    std::memcpy(gxf_tensor.value()->pointer(), buf.data(), buf.size());
+    // Copy data to GPU tensor
+    cudaError_t cuda_result = cudaMemcpy(gxf_tensor.value()->pointer(), buf.data(), buf.size(), cudaMemcpyHostToDevice);
+    if (cuda_result != cudaSuccess) {
+      throw std::runtime_error("Failed to copy data to GPU tensor: " + std::string(cudaGetErrorString(cuda_result)));
+    }
 
     // emit
     auto result = holoscan::gxf::Entity(std::move(out_message.value()));
