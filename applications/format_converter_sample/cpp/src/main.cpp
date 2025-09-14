@@ -78,10 +78,15 @@ class SyntheticSourceOp : public Operator {
     // emit
     auto result = holoscan::gxf::Entity(std::move(out_message.value()));
     output.emit(result, "out");
+    
+    frame_count_++;
+    
   }
 
  private:
   Parameter<std::shared_ptr<Allocator>> allocator_;
+  Parameter<int> count_;
+  int frame_count_ = 0;
 };
 
 
@@ -157,7 +162,10 @@ int main(int argc, char **argv) {
   auto allocator = app.make_resource<UnboundedAllocator>("allocator");
 
   // instantiate operators
-  auto src = app.make_operator<SyntheticSourceOp>("src", Arg("allocator") = allocator);
+  auto src = app.make_operator<SyntheticSourceOp>("src", 
+      Arg("allocator") = allocator,
+      Arg("count") = 1  // Emit only 1 frame then stop
+  );
   auto fmt = app.make_operator<ops::FormatConverterOp>("fmt",
       Arg("out_dtype") = std::string("float32"),
       Arg("in_dtype") = std::string("uint8"),
