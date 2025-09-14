@@ -22,6 +22,7 @@ class SyntheticSourceOp : public Operator {
     // output port named "out"
     spec.output<holoscan::gxf::Entity>("out");
     spec.param(allocator_, "allocator", "Memory allocator", "Memory allocator for tensor");
+    spec.param(count_, "count", "Frame count", "Number of frames to emit", 1);
   }
 
   void compute(InputContext&, OutputContext& output, ExecutionContext& context) override {
