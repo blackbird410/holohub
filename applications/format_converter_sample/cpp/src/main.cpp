@@ -26,6 +26,11 @@ class SyntheticSourceOp : public Operator {
   }
 
   void compute(InputContext&, OutputContext& output, ExecutionContext& context) override {
+    // Check if we should still emit frames
+    if (frame_count_ >= count_.get()) {
+      return; // Stop emitting
+    }
+
     // build a tiny synthetic HxWxC uint8 image (H=48, W=64, C=3)
     const int H = 48;
     const int W = 64;
