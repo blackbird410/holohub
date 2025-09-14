@@ -48,7 +48,7 @@ class SyntheticSourceOp : public Operator {
       throw std::runtime_error("Failed to allocate output message");
     }
 
-    auto gxf_tensor = out_message.value().add<nvidia::gxf::Tensor>();
+    auto gxf_tensor = out_message.value().add<nvidia::gxf::Tensor>("tensor");
     if (!gxf_tensor) {
       throw std::runtime_error("Failed to allocate tensor");
     }
@@ -157,6 +157,8 @@ int main(int argc, char **argv) {
   auto fmt = app.make_operator<ops::FormatConverterOp>("fmt",
       Arg("out_dtype") = std::string("float32"),
       Arg("in_dtype") = std::string("uint8"),
+      Arg("in_tensor_name") = std::string("tensor"),
+      Arg("out_tensor_name") = std::string("tensor"),
       Arg("pool") = allocator
   );
   auto saver = app.make_operator<SaverOp>("saver");
