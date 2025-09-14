@@ -75,12 +75,18 @@ class SyntheticSourceOp : public Operator {
       throw std::runtime_error("Failed to copy data to GPU tensor: " + std::string(cudaGetErrorString(cuda_result)));
     }
 
+    HOLOSCAN_LOG_INFO("SyntheticSourceOp: Emitting frame {} of {}", frame_count_ + 1, count_.get());
+    
     // emit
     auto result = holoscan::gxf::Entity(std::move(out_message.value()));
     output.emit(result, "out");
     
     frame_count_++;
     
+    // Log completion after emitting the last frame
+    if (frame_count_ >= count_.get()) {
+      HOLOSCAN_LOG_INFO("SyntheticSourceOp: Completed emitting {} frames", frame_count_);
+    }
   }
 
  private:
@@ -101,7 +107,7 @@ class SaverOp : public Operator {
     spec.param(out_path_, "out_path", "Output file path", "Path to save metadata", std::string("/tmp/fc_metadata.txt"));
   }
 
-  void compute(InputContext &context, OutputContext&, ExecutionContext&) override {
+  void compute(InputContext &context, OutputContext&, ExecutionContext& exec_context) override {
     auto maybe_message = context.receive<holoscan::gxf::Entity>("in");
     if (!maybe_message) {
       HOLOSCAN_LOG_ERROR("SaverOp: no message received");
@@ -109,6 +115,12 @@ class SaverOp : public Operator {
     }
 
     auto message = maybe_message.value();
+    
+    // Handle end-of-stream (nullptr) signal
+    if (message.is_null()) {
+      HOLOSCAN_LOG_INFO("SaverOp: Received end-of-stream signal, stopping");
+      return;
+    }
     
     // Try to get the tensor from the message
     auto maybe_tensor = message.get<holoscan::Tensor>();
@@ -118,6 +130,9 @@ class SaverOp : public Operator {
     }
 
     auto tensor = maybe_tensor;
+    
+    HOLOSCAN_LOG_INFO("SaverOp: Processing tensor with shape [{}, {}, {}]", 
+                     tensor->shape()[0], tensor->shape()[1], tensor->shape()[2]);
 
     // Get tensor metadata
     auto shape = tensor->shape();
@@ -136,8 +151,15 @@ class SaverOp : public Operator {
 
     // write a simple metadata file
     std::string out_path = out_path_.get();
+    
+    HOLOSCAN_LOG_INFO("SaverOp: Writing metadata to file: {}", out_path);
 
     std::ofstream ofs(out_path);
+    if (!ofs.is_open()) {
+      HOLOSCAN_LOG_ERROR("SaverOp: Failed to open output file: {}", out_path);
+      return;
+    }
+    
     ofs << "dtype=" << dtype_str << " layout=hwc shape=";
     for (int64_t i = 0; i < ndim; ++i) {
       if (i) ofs << ",";
@@ -145,6 +167,8 @@ class SaverOp : public Operator {
     }
     ofs << std::endl;
     ofs.close();
+    
+    HOLOSCAN_LOG_INFO("SaverOp: Successfully wrote metadata file");
 
     // short sleep to ensure file flushed if test immediately reads it
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
@@ -158,7 +182,7 @@ class SaverOp : public Operator {
 int main(int argc, char **argv) {
   Application app;
 
-  // Create allocator
+  // Create allocator for GPU memory
   auto allocator = app.make_resource<UnboundedAllocator>("allocator");
 
   // instantiate operators
@@ -179,9 +203,12 @@ int main(int argc, char **argv) {
   app.add_flow(src, fmt);
   app.add_flow(fmt, saver);
 
+  HOLOSCAN_LOG_INFO("Starting format converter pipeline...");
+
   // run for a short time - source emits one frame and the app should exit
   app.run();
 
+  HOLOSCAN_LOG_INFO("Pipeline execution completed");
   std::cout << "format_converter_app finished\n";
   return 0;
 }
