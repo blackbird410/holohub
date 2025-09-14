@@ -5,7 +5,7 @@ find_package(holoscan 1.0 REQUIRED CONFIG
   PATHS "/opt/nvidia/holoscan" "/workspace/holoscan-sdk/install")
 
 add_executable(${PROJECT_NAME}
-  main.cpp
+  src/main.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -16,7 +16,7 @@ target_link_libraries(${PROJECT_NAME}
 
 if(BUILD_TESTING)
   enable_testing()
-  add_subdirector(tests)
+  add_subdirectory(tests)
 endif()
 
 # Install application into the install/ directory for packaging

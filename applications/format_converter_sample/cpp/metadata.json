@@ -23,7 +23,7 @@
       "data": []
     },
     "run": {
-      "command": "<holohub_app_bin>/format_converter_app",
+      "command": "<holohub_app_bin>/format_converter_sample",
       "workdir": "holohub_app_bin"
     }
   }
