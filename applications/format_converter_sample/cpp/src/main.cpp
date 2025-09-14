@@ -38,7 +38,9 @@ class SyntheticSourceOp : public Operator {
 
     // Create a simple contiguous buffer (uint8)
     std::vector<uint8_t> buf(H * W * C);
-    for (size_t i = 0; i < buf.size(); ++i) buf[i] = static_cast<uint8_t>(i & 0xFF);
+    for (size_t i = 0; i < buf.size(); ++i) {
+      buf[i] = static_cast<uint8_t>((i + frame_count_ * 10) & 0xFF); // Add frame variation
+    }
 
     // Create a GXF entity with tensor
     auto out_message = nvidia::gxf::Entity::New(context.context());
