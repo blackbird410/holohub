@@ -15,7 +15,7 @@ TEST(FormatConverterIntegration, ProducesExpectedMetadata) {
   if (fs::exists(out_meta)) fs::remove(out_meta);
 
   // run the app binary (assumes it's built in parent build dir)
-  int rc = std::system("../format_converter_app");
+  int rc = std::system("../format_converter_sample");
   // it's OK if return code is non-zero; we still check metadata file presence
 
   // wait up to 10s
